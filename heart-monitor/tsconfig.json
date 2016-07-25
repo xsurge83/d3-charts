@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "sourceMap": true
+  },
+  "files": [
+    "../typings/main.d.ts",
+    "./main.ts"
+  ],
+  "compileOnSave": false,
+  "buildOnSave": false
+}

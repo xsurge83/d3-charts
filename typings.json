@@ -1,0 +1,10 @@
+{
+  "name": "ts",
+  "version": false,
+  "dependencies": {
+    "lodash": "registry:npm/lodash#4.0.0+20160723033700"
+  },
+  "ambientDependencies": {
+    "d3": "registry:dt/d3#0.0.0+20160628065019"
+  }
+}
