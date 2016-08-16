@@ -62,7 +62,6 @@ export class Chart {
 
     set(config) {
         _.extend(this, DEFAULTS, config);
-        debugger;
     }
 
     init() {
@@ -87,6 +86,11 @@ export class Chart {
 export class ChartData {
     name:string;
     data:number[];
+
+    constructor(name, data) {
+        this.name = name;
+        this.data = data
+    }
 }
 
 export class StackedLineChart extends Chart {
@@ -105,8 +109,8 @@ export class StackedLineChart extends Chart {
         super.init();
 
         this.chart.append('g').classed('x axis', true);
-        this.chartGroups = this.chart.append('g').classed('chartGroup', true);
         this.labelGroups = this.chart.append('g').classed('labelGroup', true);
+        this.chartGroups = this.chart.append('g').classed('chartGroup', true);
 
         this.labelGroups.attr('transform', 'translate(0, 30)');
         this.chartGroups.attr('transform', 'translate(120, 30)');
@@ -115,10 +119,9 @@ export class StackedLineChart extends Chart {
     render(chartsData:ChartData[]) {
         const [,h] = this.dimensions();
         var chartSize = h / chartsData.length;
-
         this.chartsData = chartsData;
-        this.renderLabelGroups(chartSize);
         this.renderCharts(chartSize);
+        this.renderLabelGroups(chartSize);
     }
 
     private renderLabelGroups(chartSize:number) {
@@ -133,10 +136,8 @@ export class StackedLineChart extends Chart {
         label.append('rect')
             .attr('y', 0)
             .attr('x', 0)
-            .style({
-                height: chartSize,
-                width: 120
-            });
+            .attr('height', chartSize)
+            .attr('width', 120);
 
         label.append('text')
             .text((d)=>d.name)
@@ -149,26 +150,31 @@ export class StackedLineChart extends Chart {
 
     private renderCharts(chartSize:number) {
 
-         this.x = d3.scale.linear()
-            .range([0, 100]);
-
-        this.y = d3.scale.linear()
-            .range([0, chartSize]);
-
-        var line = d3.svg.line()
-            .x((d:any[])=> this.x(d[0]))
-            .y((d:any[])=> this.y(d[1]));
+        const width = 100;
 
         this.chartGroups
             .selectAll('g.line')
             .data(this.chartsData)
             .enter()
             .append('g')
-            .classed('line' , true)
+            .classed('line', true)
+            .attr('class', (d, i)=> `line ${d.name.toLowerCase()}`)
+            .attr('transform', (d, i)=> `translate(0, ${i * chartSize})`)
             .append('path')
-            .attr('id', (d, i)=> d.name.toLowerCase())
-            // .attr('d', (d:any)=>line(d.data))
-            .attr('d', function(d){
+            .attr('d', (d:any) => {
+
+                var x = d3.scale.linear()
+                    .domain([0, d3.max(d.data, (d)=> d[0])])
+                    .range([0, width]);
+
+                var y = d3.scale.linear()
+                    .domain([0, d3.max(d.data, (d)=> d[1])])
+                    .range([chartSize, 0]);
+
+                var line = d3.svg.line()
+                    .x((d:any[])=> x(d[0]))
+                    .y((d:any[])=> y(d[1]));
+
                 return line(d.data);
             })
             .style('stroke', '#34ACE4')
