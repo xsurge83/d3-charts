@@ -93,12 +93,21 @@ export class ChartData {
     }
 }
 
+
+export class LineChart extends Chart {
+
+}
+
+
+//TODO
 export class StackedLineChart extends Chart {
     private x:d3.scale.Linear<number,number>;
     private y:d3.scale.Linear<number,number>;
     private chartsData:ChartData[];
     private chartGroups:d3.Selection<any>;
     private labelGroups:d3.Selection<any>;
+    private chartSize:number;
+    private chartMargin :number = 5;
 
     constructor(config) {
         super(config)
@@ -113,30 +122,34 @@ export class StackedLineChart extends Chart {
         this.chartGroups = this.chart.append('g').classed('chartGroup', true);
 
         this.labelGroups.attr('transform', 'translate(0, 30)');
-        this.chartGroups.attr('transform', 'translate(120, 30)');
+        this.chartGroups.attr('transform', 'translate(122, 30)');
     }
 
     render(chartsData:ChartData[]) {
         const [,h] = this.dimensions();
-        var chartSize = h / chartsData.length;
+        var _this = this;
+        this.chartSize = h / chartsData.length;
         this.chartsData = chartsData;
-        this.renderCharts(chartSize);
-        this.renderLabelGroups(chartSize);
+
+        chartsData.forEach((chartData, index)=> {
+            _this.renderChart(chartData, index)
+        });
+        this.renderLabelGroups();
     }
 
-    private renderLabelGroups(chartSize:number) {
+    private renderLabelGroups() {
         var label = this.labelGroups
             .selectAll('g.label-box')
             .data(this.chartsData)
             .enter()
             .append('g')
             .attr('class', 'label-box')
-            .attr('transform', (d, i)=> `translate(0, ${i * chartSize})`);
+            .attr('transform', (d, i)=> `translate(0, ${(i * (this.chartSize+this.chartMargin))})`);
 
         label.append('rect')
             .attr('y', 0)
             .attr('x', 0)
-            .attr('height', chartSize)
+            .attr('height', this.chartSize)
             .attr('width', 120);
 
         label.append('text')
@@ -145,42 +158,46 @@ export class StackedLineChart extends Chart {
             .attr('x', 60)
             .attr('dy', '2em')
             .classed('label', true)
-
     }
 
-    private renderCharts(chartSize:number) {
+    private renderChart(chartData:ChartData, index) {
 
-        const width = 100;
+        const width = 400;
+        const bottomMargin = 13;
+
+        let chartSize = this.chartSize;
+
+        var x = d3.scale.linear()
+            .domain([0, d3.max(chartData.data, (d)=> d[0])])
+            .range([0, width]);
+
+        var y = d3.scale.linear()
+            .domain([0, d3.max(chartData.data, (d)=> d[1])])
+            .range([chartSize - bottomMargin, 0]);
+
+        var line = d3.svg.line()
+            .x((d:any[])=> x(d[0]))
+            .y((d:any[])=> y(d[1]));
+
+        var xAxis = d3.svg.axis()
+            .scale(x)
+            .orient("bottom");
+
+        this.chartGroups.append("g")
+            .attr("class", "x axis")
+            .attr("transform", `translate(0, ${(((index+1) * (chartSize+this.chartMargin))-this.chartMargin - bottomMargin)})`)
+            .call(xAxis);
 
         this.chartGroups
-            .selectAll('g.line')
-            .data(this.chartsData)
-            .enter()
+            .datum(chartData)
             .append('g')
             .classed('line', true)
             .attr('class', (d, i)=> `line ${d.name.toLowerCase()}`)
-            .attr('transform', (d, i)=> `translate(0, ${i * chartSize})`)
+            .attr('transform', `translate(0,  ${(index * (chartSize + this.chartMargin)) }) `)
             .append('path')
-            .attr('d', (d:any) => {
-
-                var x = d3.scale.linear()
-                    .domain([0, d3.max(d.data, (d)=> d[0])])
-                    .range([0, width]);
-
-                var y = d3.scale.linear()
-                    .domain([0, d3.max(d.data, (d)=> d[1])])
-                    .range([chartSize, 0]);
-
-                var line = d3.svg.line()
-                    .x((d:any[])=> x(d[0]))
-                    .y((d:any[])=> y(d[1]));
-
-                return line(d.data);
-            })
+            .attr('d', (d:any)=> line(d.data))
             .style('stroke', '#34ACE4')
             .style('stroke-width', '1px')
-
-
     }
 }
 

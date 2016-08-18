@@ -13,11 +13,12 @@ const POINT_PER_SEC = 256;
 
 var chartsData: ChartData [] = [
     new ChartData('acceleration', [[0,0], [2,2]]),
-    new ChartData('speed', [[0,1], [2,2]]),
+    new ChartData('speed', [[0,0], [2,2]]),
+    new ChartData('dd', [[0,0], [2,2]]),
 ];
 
 let chart = new StackedLineChart({
-    height: 200,
+    height: 300,
     target: document.getElementById('chart')
 });
 
