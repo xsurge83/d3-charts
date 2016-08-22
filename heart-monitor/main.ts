@@ -8,21 +8,63 @@
  * http://chimera.labs.oreilly.com/books/1230000000345/ch07.html
  */
 import {StackedLineChart, ChartData} from './stacked-chart'
+import * as d3 from 'd3'
 
 const POINT_PER_SEC = 256;
+document.addEventListener('DOMContentLoaded', ()=> {
 
-var chartsData: ChartData [] = [
-    new ChartData('acceleration', [[0,0], [2,2]]),
-    new ChartData('speed', [[0,0], [2,2]]),
-    new ChartData('dd', [[0,0], [2,2]]),
-];
+    let chart = new StackedLineChart({
+        height: 300,
+        target: document.getElementById('chart'),
+    });
 
-let chart = new StackedLineChart({
-    height: 300,
-    target: document.getElementById('chart')
+    d3.csv("./output.csv")
+        .get(function (error, rows) {
+
+            let dataGroups:ChartData[] = [
+                    new ChartData('acceleration', []),
+                    new ChartData('x', []),
+                    new ChartData('y', []),
+                    new ChartData('z', [])
+                ],
+                xAxisData:any[] = [];
+
+            var seconds = 0,
+                prevValue, prevMilliSecond;
+            rows.forEach((row:any)=> {
+
+                var accelerate = parseFloat(row.acceleration),
+                    x = parseFloat(row.x),
+                    y = parseFloat(row.y),
+                    z = parseFloat(row.z),
+                    milliSecond;
+
+                if (x === 0 && y === 0 && z === 0) {
+                    return;
+                }
+
+                milliSecond = parseInt(new Date(row.date).getMilliseconds().toString()[0]);
+
+                if (milliSecond !== prevMilliSecond) {
+                    prevMilliSecond = milliSecond;
+                    if (milliSecond === 1) {
+                        seconds += 1;
+                    }
+                    xAxisData.push(seconds + (milliSecond/10));
+                    dataGroups[0].push(accelerate);
+                    dataGroups[1].push(x);
+                    dataGroups[2].push(y);
+                    dataGroups[3].push(z);
+                }
+
+            });
+
+            debugger;
+            chart.render(xAxisData, dataGroups);
+
+        });
 });
 
-chart.render(chartsData);
 
 //
 // //

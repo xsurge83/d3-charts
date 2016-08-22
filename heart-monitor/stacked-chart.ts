@@ -54,7 +54,6 @@ export class Chart {
     chart:d3.Selection<any>;
     xAxis:d3.svg.Axis;
 
-
     constructor(config) {
         this.set(config);
         this.init();
@@ -91,23 +90,24 @@ export class ChartData {
         this.name = name;
         this.data = data
     }
+
+    push(item:any) {
+        this.data.push(item);
+    }
 }
 
 
-export class LineChart extends Chart {
-
-}
-
-
-//TODO
 export class StackedLineChart extends Chart {
     private x:d3.scale.Linear<number,number>;
     private y:d3.scale.Linear<number,number>;
     private chartsData:ChartData[];
+    private xAxisData:any[];
     private chartGroups:d3.Selection<any>;
     private labelGroups:d3.Selection<any>;
     private chartSize:number;
-    private chartMargin :number = 5;
+    private CHART_MARGIN:number = 5;
+    private CHART_WIDTH:number = 400;
+    private BOTTOM_MARGIN = 13;
 
     constructor(config) {
         super(config)
@@ -125,15 +125,36 @@ export class StackedLineChart extends Chart {
         this.chartGroups.attr('transform', 'translate(122, 30)');
     }
 
-    render(chartsData:ChartData[]) {
+    render(xAxisData:any[], chartsData:ChartData[]) {
         const [,h] = this.dimensions();
-        var _this = this;
+        
         this.chartSize = h / chartsData.length;
         this.chartsData = chartsData;
+        this.xAxisData = xAxisData;
 
-        chartsData.forEach((chartData, index)=> {
-            _this.renderChart(chartData, index)
-        });
+        this.x = d3.scale.linear()
+            .domain(d3.extent(this.xAxisData))
+            .range([0, this.CHART_WIDTH]);
+
+
+        var xAxis = d3.svg.axis()
+            .scale(this.x)
+            .orient("bottom")
+            .tickFormat((d)=>{
+                debugger;
+                //TODO: add to options 
+                return new Date(d).getSeconds();
+            });
+
+        this.chartGroups.append("g")
+            .attr("class", "x axis")
+            .attr("transform", `translate(0, ${(this.chartSize - this.BOTTOM_MARGIN)})`)
+            .call(xAxis);
+
+        //
+        // chartsData.forEach((chartData, index)=> {
+        //     _this.renderChart(chartData, index)
+        // });
         this.renderLabelGroups();
     }
 
@@ -144,7 +165,7 @@ export class StackedLineChart extends Chart {
             .enter()
             .append('g')
             .attr('class', 'label-box')
-            .attr('transform', (d, i)=> `translate(0, ${(i * (this.chartSize+this.chartMargin))})`);
+            .attr('transform', (d, i)=> `translate(0, ${(i * (this.chartSize + this.CHART_MARGIN))})`);
 
         label.append('rect')
             .attr('y', 0)
@@ -162,42 +183,84 @@ export class StackedLineChart extends Chart {
 
     private renderChart(chartData:ChartData, index) {
 
-        const width = 400;
-        const bottomMargin = 13;
+        const bottomMargin = this.BOTTOM_MARGIN;
 
         let chartSize = this.chartSize;
-
-        var x = d3.scale.linear()
-            .domain([0, d3.max(chartData.data, (d)=> d[0])])
-            .range([0, width]);
 
         var y = d3.scale.linear()
             .domain([0, d3.max(chartData.data, (d)=> d[1])])
             .range([chartSize - bottomMargin, 0]);
 
         var line = d3.svg.line()
-            .x((d:any[])=> x(d[0]))
+            .x((d:any[])=> this.x(d[0]))
             .y((d:any[])=> y(d[1]));
 
-        var xAxis = d3.svg.axis()
-            .scale(x)
-            .orient("bottom");
 
-        this.chartGroups.append("g")
-            .attr("class", "x axis")
-            .attr("transform", `translate(0, ${(((index+1) * (chartSize+this.chartMargin))-this.chartMargin - bottomMargin)})`)
-            .call(xAxis);
+        var yAxis = d3.svg.axis()
+            .scale(y)
+            .ticks(4)
+            .tickFormat(d3.format('d'))
+            .orient('right');
 
-        this.chartGroups
+        var chart = this.chartGroups.append('g')
+            .attr('id', chartData.name)
+            .attr('transform', `translate(0, ${(((index) * (chartSize + this.CHART_MARGIN)))})`);
+
+
+        chart.append('g')
+            .attr('class', 'y axis')
+            .call(yAxis);
+
+        chart
             .datum(chartData)
             .append('g')
             .classed('line', true)
             .attr('class', (d, i)=> `line ${d.name.toLowerCase()}`)
-            .attr('transform', `translate(0,  ${(index * (chartSize + this.chartMargin)) }) `)
             .append('path')
             .attr('d', (d:any)=> line(d.data))
             .style('stroke', '#34ACE4')
-            .style('stroke-width', '1px')
+            .style('stroke-width', '1px');
+
+        var focus = chart.append('g')
+            .attr("class", "focus")
+            .style("display", "none");
+
+        focus.append('circle')
+            .attr('r', 4.5);
+
+        focus.append("text")
+            .attr('x', 4)
+            .attr('dy', ".35em");
+
+        chart.append("rect")
+            .attr("class", "overlay")
+            .attr("width", this.CHART_WIDTH)
+            .attr("height", chartSize)
+            .on("mouseover", function () {
+                focus.style("display", null);
+            })
+            .on("mouseout", function () {
+                focus.style("display", "none");
+            })
+            .on("mousemove", mousemove);
+
+        var bisect = d3.bisector(function (d) {
+            return d[0];
+        }).left;
+
+        function mousemove() {
+            var x0 = x.invert(d3.mouse(this)[0]),
+                i = bisect(chartData.data, x0),
+                d0 = chartData.data[i - 1],
+                d1 = chartData.data[i],
+                d;
+
+            console.log(x0);
+            console.log(i);
+            d = x0 - d0[0] > d1[0] - x0 ? d1 : d0;
+            focus.attr("transform", "translate(" + x(d[0]) + "," + y(d[1]) + ")");
+            focus.select("text").text(d[0]);
+        }
     }
 }
 
