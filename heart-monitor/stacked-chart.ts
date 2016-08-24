@@ -114,7 +114,6 @@ export class StackedLineChart extends Chart {
     }
 
     init() {
-        const [w, h] = this.dimensions();
         super.init();
 
         this.chart.append('g').classed('x axis', true);
@@ -122,12 +121,14 @@ export class StackedLineChart extends Chart {
         this.chartGroups = this.chart.append('g').classed('chartGroup', true);
 
         this.labelGroups.attr('transform', 'translate(0, 30)');
-        this.chartGroups.attr('transform', 'translate(122, 30)');
+        this.chartGroups.attr('transform', 'translate(120, 30)');
     }
 
     render(xAxisData:any[], chartsData:ChartData[]) {
+        var _this = this;
+
         const [,h] = this.dimensions();
-        
+
         this.chartSize = h / chartsData.length;
         this.chartsData = chartsData;
         this.xAxisData = xAxisData;
@@ -136,26 +137,30 @@ export class StackedLineChart extends Chart {
             .domain(d3.extent(this.xAxisData))
             .range([0, this.CHART_WIDTH]);
 
-
-        var xAxis = d3.svg.axis()
+        this.xAxis = d3.svg.axis()
             .scale(this.x)
-            .orient("bottom")
-            .tickFormat((d)=>{
-                debugger;
-                //TODO: add to options 
-                return new Date(d).getSeconds();
-            });
+            .orient("top");
 
         this.chartGroups.append("g")
             .attr("class", "x axis")
-            .attr("transform", `translate(0, ${(this.chartSize - this.BOTTOM_MARGIN)})`)
-            .call(xAxis);
+            .call(this.xAxis);
 
-        //
-        // chartsData.forEach((chartData, index)=> {
-        //     _this.renderChart(chartData, index)
-        // });
+        chartsData.forEach((chartData, index)=> {
+            _this.renderChart(chartData, index)
+        });
+
         this.renderLabelGroups();
+    }
+
+    updateData(xAxisData:any[], chartsData:ChartData[]){
+        this.x.domain(d3.extent(xAxisData));
+
+        var svg = this.chartGroups.transition();
+        
+        svg.select('.x.axis')
+            .duration(750)
+            .call(this.xAxis); 
+
     }
 
     private renderLabelGroups() {
@@ -183,32 +188,28 @@ export class StackedLineChart extends Chart {
 
     private renderChart(chartData:ChartData, index) {
 
-        const bottomMargin = this.BOTTOM_MARGIN;
-
         let chartSize = this.chartSize;
 
         var y = d3.scale.linear()
-            .domain([0, d3.max(chartData.data, (d)=> d[1])])
-            .range([chartSize - bottomMargin, 0]);
+            .domain(d3.extent(chartData.data))
+            .range([chartSize , 0]);
 
         var line = d3.svg.line()
-            .x((d:any[])=> this.x(d[0]))
-            .y((d:any[])=> y(d[1]));
-
+            .x((d:any, i:number)=>this.x(this.xAxisData[i]))
+            .y((d:any)=> y(d));
 
         var yAxis = d3.svg.axis()
             .scale(y)
             .ticks(4)
-            .tickFormat(d3.format('d'))
             .orient('right');
 
         var chart = this.chartGroups.append('g')
             .attr('id', chartData.name)
-            .attr('transform', `translate(0, ${(((index) * (chartSize + this.CHART_MARGIN)))})`);
-
+            .attr('transform',`translate(0, ${(index * (this.chartSize + this.CHART_MARGIN))})`);
 
         chart.append('g')
             .attr('class', 'y axis')
+            .attr('transform',`translate(${this.CHART_WIDTH}, 0)`)
             .call(yAxis);
 
         chart

@@ -31,6 +31,7 @@ document.addEventListener('DOMContentLoaded', ()=> {
 
             var seconds = 0,
                 prevValue, prevMilliSecond;
+            
             rows.forEach((row:any)=> {
 
                 var accelerate = parseFloat(row.acceleration),
@@ -46,8 +47,7 @@ document.addEventListener('DOMContentLoaded', ()=> {
                 milliSecond = parseInt(new Date(row.date).getMilliseconds().toString()[0]);
 
                 if (milliSecond !== prevMilliSecond) {
-                    prevMilliSecond = milliSecond;
-                    if (milliSecond === 1) {
+                    if (milliSecond < prevMilliSecond) {
                         seconds += 1;
                     }
                     xAxisData.push(seconds + (milliSecond/10));
@@ -55,12 +55,13 @@ document.addEventListener('DOMContentLoaded', ()=> {
                     dataGroups[1].push(x);
                     dataGroups[2].push(y);
                     dataGroups[3].push(z);
+                    prevMilliSecond = milliSecond;
                 }
-
             });
-
-            debugger;
             chart.render(xAxisData, dataGroups);
+            
+            
+            chart.updateData(xAxisData, dataGroups);
 
         });
 });
