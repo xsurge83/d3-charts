@@ -243,25 +243,25 @@ export class StackedLineChart extends Chart {
             .on("mouseout", function () {
                 focus.style("display", "none");
             })
-            .on("mousemove", mousemove);
+            // .on("mousemove", mousemove);
 
         var bisect = d3.bisector(function (d) {
             return d[0];
         }).left;
 
-        function mousemove() {
-            var x0 = x.invert(d3.mouse(this)[0]),
-                i = bisect(chartData.data, x0),
-                d0 = chartData.data[i - 1],
-                d1 = chartData.data[i],
-                d;
-
-            console.log(x0);
-            console.log(i);
-            d = x0 - d0[0] > d1[0] - x0 ? d1 : d0;
-            focus.attr("transform", "translate(" + x(d[0]) + "," + y(d[1]) + ")");
-            focus.select("text").text(d[0]);
-        }
+        // function mousemove() {
+        //     var x0 = x.invert(d3.mouse(this)[0]),
+        //         i = bisect(chartData.data, x0),
+        //         d0 = chartData.data[i - 1],
+        //         d1 = chartData.data[i],
+        //         d;
+        //
+        //     console.log(x0);
+        //     console.log(i);
+        //     d = x0 - d0[0] > d1[0] - x0 ? d1 : d0;
+        //     focus.attr("transform", "translate(" + x(d[0]) + "," + y(d[1]) + ")");
+        //     focus.select("text").text(d[0]);
+        // }
     }
 }
 
