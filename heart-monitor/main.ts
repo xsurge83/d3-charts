@@ -60,23 +60,23 @@ document.addEventListener('DOMContentLoaded', ()=> {
             });
             chart.render(xAxisData, dataGroups);
             
-            setTimeout(()=>{
-                const SLICE_NUM = 30; 
-
-                let newGroupData = [
-                    new ChartData('acceleration', []),
-                    new ChartData('x', []),
-                    new ChartData('y', []),
-                    new ChartData('z', [])
-                ];
-
-                newGroupData[0].data = dataGroups[0].data.slice(0, SLICE_NUM);
-                newGroupData[1].data = dataGroups[1].data.slice(0, SLICE_NUM);
-                newGroupData[2].data = dataGroups[2].data.slice(0, SLICE_NUM);
-                newGroupData[3].data = dataGroups[3].data.slice(0, SLICE_NUM);
-                debugger;
-                chart.updateData(xAxisData.slice(0, SLICE_NUM), newGroupData);
-            }, 4000 )
+            // setTimeout(()=>{
+            //     const SLICE_NUM = 30;
+            //
+            //     let newGroupData = [
+            //         new ChartData('acceleration', []),
+            //         new ChartData('x', []),
+            //         new ChartData('y', []),
+            //         new ChartData('z', [])
+            //     ];
+            //
+            //     newGroupData[0].data = dataGroups[0].data.slice(0, SLICE_NUM);
+            //     newGroupData[1].data = dataGroups[1].data.slice(0, SLICE_NUM);
+            //     newGroupData[2].data = dataGroups[2].data.slice(0, SLICE_NUM);
+            //     newGroupData[3].data = dataGroups[3].data.slice(0, SLICE_NUM);
+            //     debugger;
+            //     chart.updateData(xAxisData.slice(0, SLICE_NUM), newGroupData);
+            // }, 4000 )
 
         });
 });
