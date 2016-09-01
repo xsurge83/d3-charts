@@ -97,7 +97,7 @@ export class ChartData {
 
 
 export class StackedLineChart extends Chart {
-    private x:d3.scale.Linear<number,number>;
+    private x:d3.time.Scale<number, number>;
     private y:d3.scale.Linear<number,number>;
     private chartsData:ChartData[];
     private xAxisData:any[];
@@ -106,7 +106,6 @@ export class StackedLineChart extends Chart {
     private chartSize:number;
     private CHART_MARGIN:number = 5;
     private CHART_WIDTH:number = 400;
-    private BOTTOM_MARGIN = 13;
 
     constructor(config) {
         super(config)
@@ -132,12 +131,15 @@ export class StackedLineChart extends Chart {
         this.chartsData = chartsData;
         this.xAxisData = xAxisData;
 
-        this.x = d3.scale.linear()
+        debugger;
+
+        this.x = d3.time.scale()
             .domain(d3.extent(this.xAxisData))
             .range([0, this.CHART_WIDTH]);
 
         this.xAxis = d3.svg.axis()
             .scale(this.x)
+            // .tickFormat(d3.time.format("%M %S %L"))
             .orient("top");
 
         this.chartGroups.append("g")
@@ -251,7 +253,7 @@ export class StackedLineChart extends Chart {
 
         function mousemove() {
 
-            var x0 = x.invert(d3.mouse(this)[0]),
+            var x0: any = x.invert(d3.mouse(this)[0]),
                 i = bisect(xAxisData, x0),
                 d0 = xAxisData[i - 1],
                 d1 = xAxisData[i];

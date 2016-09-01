@@ -6,6 +6,7 @@
  * stacked chart
  * - see strava widget https://www.strava.com/activities/651238157/analysis/200/288
  * http://chimera.labs.oreilly.com/books/1230000000345/ch07.html
+ * http://bl.ocks.org/simenbrekken/6634070
  */
 import {StackedLineChart, ChartData} from './stacked-chart'
 import * as d3 from 'd3'
@@ -31,7 +32,8 @@ document.addEventListener('DOMContentLoaded', ()=> {
 
             var seconds = 0,
                 prevValue, prevMilliSecond;
-            
+
+            debugger;
             rows.forEach((row:any)=> {
 
                 var accelerate = parseFloat(row.acceleration),
@@ -44,22 +46,15 @@ document.addEventListener('DOMContentLoaded', ()=> {
                     return;
                 }
 
-                milliSecond = parseInt(new Date(row.date).getMilliseconds().toString()[0]);
+                xAxisData.push(new Date(row.date));
+                dataGroups[0].push(accelerate);
+                dataGroups[1].push(x);
+                dataGroups[2].push(y);
+                dataGroups[3].push(z);
 
-                if (milliSecond !== prevMilliSecond) {
-                    if (milliSecond < prevMilliSecond) {
-                        seconds += 1;
-                    }
-                    xAxisData.push(seconds + (milliSecond/10));
-                    dataGroups[0].push(accelerate);
-                    dataGroups[1].push(x);
-                    dataGroups[2].push(y);
-                    dataGroups[3].push(z);
-                    prevMilliSecond = milliSecond;
-                }
             });
             chart.render(xAxisData, dataGroups);
-            
+
             // setTimeout(()=>{
             //     const SLICE_NUM = 30;
             //
